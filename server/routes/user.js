@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { obj } = require('../controllers/userControllers');
+const { verificarToken } = require('../middlewares/authentication');
 
-router.get("/", obj.getUser);
+router.get("/", verificarToken ,obj.getUser);
 
 router.post('/', obj.postUser);
 

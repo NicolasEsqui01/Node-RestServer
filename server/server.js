@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const port = process.env.PORT;
-const urlDB = process.env.URLDB
+const urlDB = process.env.URLDB;
 
 //Middlewere 
 // parse application/x-www-form-urlencoded
