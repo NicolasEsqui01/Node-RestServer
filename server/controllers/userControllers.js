@@ -75,10 +75,9 @@ obj.putUser = (req, res) => {
     let { id } = req.params;
     let { nombre, role, img, email, estado } = req.body;
     let body = _.pick({ nombre, role, img, email, estado }, ["nombre", "role", "img", "email", "estado"]);
-
+    
     // Search a user and the update
-    User.findOneAndUpdate(id, body, { new: true, runValidators: true }, (err, usuario) => {
-
+    User.findOneAndUpdate(id, body, { new: true/*, runValidators: true*/ }, (err, usuario) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
