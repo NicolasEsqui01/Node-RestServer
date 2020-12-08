@@ -4,6 +4,7 @@ const { obj } = require("../controllers/loginControllers");
 
 
 Router.post("/", obj.login);
+Router.post("/google", obj.loginGoogle);
 
 
 

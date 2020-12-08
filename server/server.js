@@ -2,7 +2,7 @@ require('./config/config');
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require('body-parser');
-
+const path = require("path");
 
 
 const app = express();
@@ -14,6 +14,10 @@ const urlDB = process.env.URLDB;
 app.use(bodyParser.urlencoded({ extended: false }));
 // pase application/json
 app.use(bodyParser.json());
+
+// habilitar la carpeta public
+app.use(express.static(path.join(__dirname,'../public')))
+
 
 
 // conexion with routes 
