@@ -56,7 +56,7 @@ obj.getCategoryId = (req, res) => {
 };
 
 obj.createCategory = (req, res) => {
-
+    
     let { descripcion } = req.body;
     let { _id } = req.usuario
 

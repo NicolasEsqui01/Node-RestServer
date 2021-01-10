@@ -1,50 +1,29 @@
 const Product = require('../models/product');
-const Category = require('../models/category');
-const User = require('../models/user');
 
 const controllers = {};
 
 controllers.getProduct = (req, res) => {
 
-    let limite = req.query.limit || 5;
+    let since = req.query.since || 0;
 
-    limite = Number(limite);
+    since = Number(since);
 
-    Product.find()
-        .populate('category')
-        .limit(limite)
+    Product.find({ disponible: true })
+        .skip(since)
+        .limit(5)
+        .populate('user', 'nombre email')
+        .populate('category', 'descripcion')
         .exec((err, products) => {
             if (err) {
-                return res.status(400).json({
+                return res.status(500).json({
                     ok: false,
                     err
                 });
             }
-
-            // products.map(product => {
-
-            //     const userId = product.category.user;
-
-            //     User.findOne({ _id: userId }, '_id nombre email role').exec((err, user) => {
-
-            //         if (err) {
-            //             return res.status(400).json({
-            //                 ok: false,
-            //                 err
-            //             });
-            //         };
-
-                    // product.category.user = user;
-
-                    res.status(200).json({
-                        ok: true,
-                        products
-                    });
-
-                // });
-
-            // });
-
+            res.status(200).json({
+                ok: true,
+                products
+            });
         });
 };
 
@@ -55,143 +34,137 @@ controllers.getProductId = (req, res) => {
     const { id } = req.params;
 
     Product.findById({ _id: id })
-        .populate("category")
+        .populate('user', 'nombre email')
+        .populate("category", 'descripcion')
         .exec((err, product) => {
             if (err) {
-                return res.status(400).json({
+                return res.status(500).json({
                     ok: false,
                     err
                 })
             };
 
-            const userId = product.category.user;
+            if (!product) {
+                return res.status(500).json({
+                    ok: false,
+                    message: " ID not existe"
+                })
+            };
 
-            /**
-             * find a user by id
-            */
-            User.findOne({ _id: userId }, '_id nombre email role').exec((err, user) => {
-
-                if (err) {
-                    return res.status(400).json({
-                        ok: false,
-                        err
-                    })
-                };
-
-                product.category.user = user;
-
-                res.status(200).json({
-                    ok: true,
-                    product
-                });
-
+            res.status(200).json({
+                ok: true,
+                product
             });
         });
+};
+
+controllers.getAllproduct = (req, res) => {
+
+    const { termino } = req.params;
+
+    let regex = new RegExp( termino ,'i');
+
+    Product.find({ name: regex })
+        .populate("category", "descripcion")
+        .exec((err, product) => {
+
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
+                    err
+                });
+            };
+
+
+
+            res.json({
+                ok: true,
+                product
+            })
+
+        });
+
 };
 
 controllers.postProduct = (req, res) => {
     /**
      * parameters of the body of a request 
     */
-    const { name, priceUni, descripcion, disponible, name_category } = req.body;
+    const { name, priceUni, descripcion, disponible, category } = req.body;
 
-    Category.findOne({ descripcion: name_category })
-        .populate('user', '_id nombre email role')
-        .exec((err, category) => {
-            if (err) {
-                return res.status(500).json({
-                    ok: false,
-                    err,
-                });
-            }
-            /**
-             * Yes the category not exist
-            */
-            if (!category) {
-                return res.status(400).json({
-                    ok: false,
-                    message: "No existe esa category"
-                });
-            };
+    /**
+     * created a new instance of product
+    */
 
-            /**
-             * created a new instance of product
-             */
+    const product = new Product({
+        name,
+        priceUni,
+        descripcion,
+        category,
+        disponible,
+        user: req.usuario
+    });
 
-            const product = new Product({
-                name,
-                priceUni,
-                descripcion,
-                category,
-                disponible
+
+    product.save((err, product) => {
+
+        if (err) {
+            return res.status(500).json({
+                ok: false,
+                err
             });
+        }
 
-
-            product.save((err, product) => {
-
-                if (err) {
-                    return res.status(400).json({
-                        ok: false,
-                        err
-                    });
-                }
-
-                res.status(200).json({
-                    ok: true,
-                    product
-                });
-
-            });
-
-
+        // Status 201 para la creacion de un new product
+        res.status(201).json({
+            ok: true,
+            product
         });
+
+    });
 };
 
 controllers.putProduct = (req, res) => {
 
     const { id } = req.params;
-    const { name, descripcion } = req.body;
+    const { name, descripcion, priceUni, disponible, category } = req.body;
 
-    Product.findOneAndUpdate(id, { name, descripcion }, { new:true })
-    .populate('category')
-    .exec((err, product) => {
-
-        if(err){
-            return res.status(400).json({
-                ok:false,
+    Product.findById({ _id: id }, (err, product) => {
+        if (err) {
+            return res.status(500).json({
+                ok: false,
                 err
             });
         };
 
-        if(!product){
-            return res.status(404).json({
-                ok:false,
-                message:"product is not finding"
+        if (!product) {
+            return res.status(400).json({
+                ok: false,
+                message: "product is not finding"
             });
         };
 
-        const userId = product.category.user;
+        product.name = name;
+        product.descripcion = descripcion;
+        product.priceUni = priceUni;
+        product.disponible = disponible;
+        product.category = category;
 
+        product.save((err, productDB) => {
 
-        User.findById({_id:userId}, '_id nombre email role').exec((err, user) => {
-
-            if(err){
-                return res.status(400).json({
-                    ok:false,
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
                     err
                 });
             };
 
-            product.category.user = user;
-
             res.status(200).json({
-                ok:true,
-                product
+                ok: true,
+                product: productDB
             });
 
         });
-
-    
     });
 };
 
@@ -200,48 +173,37 @@ controllers.deleteProduct = (req, res) => {
     const { id } = req.params;
 
     Product.findOneAndUpdate(id, { disponible: false }, { new: true })
-    .populate('category')
-    .exec((err, product) => {
-        if(err){
-            return res.status(400).json({
-                ok:false,
-                err
-            });
-        };
-
-        if(!product){
-            return res.status(404).json({
-                ok:false,
-                message:"Not product found"
-            });
-        };
-
-        const userId = product.category.user;
-        
-        User.findById({_id:userId}, "_id nombre email role").exec((err, user)=>{
-
-            if(err){
-                return res.status(400).json({
-                    ok:false,
+        .exec((err, product) => {
+            if (err) {
+                return res.status(500).json({
+                    ok: false,
                     err
                 });
-            };  
+            };
 
-            product.category.user = user;
+            if (!product) {
+                return res.status(400).json({
+                    ok: false,
+                    message: "Not product found"
+                });
+            };
 
-            res.status(200).json({
-                ok:true,
-                product,
+
+            product.save((err, productDB) => {
+                if (err) {
+                    return res.status(400).json({
+                        ok: false,
+                        err
+                    });
+                };
+
+                res.status(200).json({
+                    ok: true,
+                    product: productDB,
+                    message: "Product deleted"
+                });
             });
-
-
         });
-
-
-    });
-
-
-
 };
 
 module.exports = { controllers }

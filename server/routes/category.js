@@ -4,22 +4,40 @@ const Router = express.Router();
 const { verificarToken, verificarAdmin_role } = require('../middlewares/authentication');
 const { obj } = require('../controllers/categoryControllers');
 
-// Buscar todas las categorias
+/**
+ * Path:"/category"
+ * method: GET 
+*/
 Router.get('/', verificarToken, obj.getCategory);
 
-// Buscar categoria por id
+/**
+ * Path:"/category/${id}"
+ * Method: GET
+*/
 Router.get('/:id', verificarToken, obj.getCategoryId);
 
-// Crear una nueva categoria
+
+/**
+ * Body: { descripcion }
+ * Path:"/category"
+ * Method: POST
+*/
 Router.post('/', verificarToken, obj.createCategory);
 
-// Actualizar una categoria
+/**
+ * Params: { id }
+ * Body: { descripcion }
+ * Path:"/category/${id}"
+ * Method: PUT
+*/
 Router.put('/:id', verificarToken, obj.toupdateCategory);
 
-// Delete de una categoria
+/**
+ * Params: { id }
+ * Path:"/category/${id}"
+ * Method: DELETE 
+*/
 Router.delete('/:id', [verificarToken, verificarAdmin_role ], obj.deleteCategory);
-
-//Solamente puede eliminar un admin una categoria
 
 
 module.exports = Router;
