@@ -2,7 +2,7 @@ require('../config/config');
 const jwt = require("jsonwebtoken");
 
 //Verificar toker 
-let verificarToken = (req, res, next) => {
+const verificarToken = (req, res, next) => {
 
     let token = req.get('Authorization');
 
@@ -25,9 +25,7 @@ let verificarToken = (req, res, next) => {
 };
 
 //Verifica role 
-
-
-let verificarAdmin_role = (req, res, next) => {
+const verificarAdmin_role = (req, res, next) => {
 
     let usuario = req.usuario;
     let rol = ['ADMIN_ROLE'];
@@ -45,5 +43,21 @@ let verificarAdmin_role = (req, res, next) => {
 };
 
 
+const verificaTokenImag = async (req, res, next) => {
+    let { token } = req.query;    
+    try {
+        let decoded = await jwt.verify(token , process.env.SEED);
+        req.usuario = decoded.usuario;
+        next();
+    } catch (err) {
+        return res.status(401).json({
+            ok:false,
+            err:{
+                message: "Token no válido"
+            }
+        });
+    }
+};
 
-module.exports = { verificarToken, verificarAdmin_role }
+
+module.exports = { verificarToken, verificarAdmin_role, verificaTokenImag }

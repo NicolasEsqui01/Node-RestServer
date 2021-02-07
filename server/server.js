@@ -2,6 +2,7 @@ require('./config/config');
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require('body-parser');
+const fileUpload = require("express-fileupload");
 const path = require("path");
 
 
@@ -18,7 +19,8 @@ app.use(bodyParser.json());
 // habilitar la carpeta public
 app.use(express.static(path.join(__dirname,'../public')))
 
-
+// 
+app.use(fileUpload());
 
 // conexion with routes 
 app.use('/', require('./routes'));
